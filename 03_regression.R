@@ -1,6 +1,6 @@
 # Title: SEP, socioenvironment, and SCD among midlife and older LGBTQIA+ adults in California 
 # Purpose: Regression
-# Date: 2025-07-22
+# Date: 2026-07-22
 
 # Set up environment -----------------------------------------------------
 library(tidyverse)
@@ -10,7 +10,7 @@ library(miceadds)
 library(marginaleffects)
 
 # load data
-file_date <- "2025-07-22"
+file_date <- "2026-07-22"
 
 df <- readr::read_csv(
   here::here("data", paste0("df_reg_cda_", file_date, ".csv")),
@@ -86,7 +86,7 @@ names(m2) <- exposures
 df_sen <- purrr::imap_dfr(m2, ~ get_model_est(.x, .y, "sen_anl"))
 
 # Save outputs -----------------------------------------------------------
-file_date <- "2025-07-22"
+file_date <- "2026-07-22"
 
 write.csv(
   df_mod_out, 
