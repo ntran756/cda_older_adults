@@ -222,7 +222,7 @@ p_dom <- ggplot(df_summary, aes(x = forcats::fct_reorder(exposure, estimate), y 
   geom_point(size = 2, color = "black", shape = 15) +
   geom_text(
   aes(label = sprintf("%.1f (%.1f, %.1f)", estimate * 100, lower * 100, upper * 100)),  
-  nudge_y = 0.26, vjust = -1, size = 3, color = "black", fontface = "bold"
+  nudge_y = 0.26, vjust = -1, size = 3, color = "black"
   ) +
   coord_flip() +
   scale_y_continuous(
