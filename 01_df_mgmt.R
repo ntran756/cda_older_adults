@@ -1,6 +1,6 @@
 # Title: SEP, socioenvironment, and SCD among midlife and older LGBTQIA+ adults in California 
 # Purpose: Data cleaning 
-# Date: 2025-07-03
+# Date: 2026-07-03
 
 
 # Set up environment -----------------------------------------------------
@@ -140,7 +140,7 @@ df <- df |>
   )
 
 # Save data --------------------------------------------------------------
-file_date <- "2025-07-03"
+file_date <- "2026-07-03"
 
 write.csv(
   df, 
