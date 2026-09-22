@@ -1,6 +1,6 @@
 # Title: SEP, socioenvironment, and SCD among midlife and older LGBTQIA+ adults in California 
 # Purpose: Descriptive analysis
-# Date: 2025-07-22
+# Date: 2026-07-22
 
 # Set up environment -----------------------------------------------------
 library(tidyverse)
@@ -8,7 +8,7 @@ library(here)
 library(tableone)
 
 # load data
-file_date <- "2025-07-03"
+file_date <- "2026-07-03"
 
 df <- readr::read_csv(
   here::here("data", paste0("df_cda_older_adults_", file_date, ".csv")),
@@ -129,7 +129,7 @@ df_cor <- lapply(pairs, function(pair) {
 }) |> dplyr::bind_rows()
 
 # Save outputs -----------------------------------------------------------
-file_date <- "2025-07-22"
+file_date <- "2026-07-22"
 
 write.csv(
   tab1, 
