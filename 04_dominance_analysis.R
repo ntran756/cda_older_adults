@@ -1,6 +1,6 @@
 # Title: SEP, socioenvironment, and SCD among midlife and older LGBTQIA+ adults in California 
 # Purpose: Dominance analysis
-# Date: 2025-08-03
+# Date: 2026-08-03
 
 # Set up environment -----------------------------------------------------
 library(tidyverse)
@@ -10,7 +10,7 @@ library(future)
 library(modelsummary)
 
 # load data
-file_date <- "2025-07-22"
+file_date <- "2026-07-22"
 
 df <- readr::read_csv(
   here::here("data", paste0("df_reg_cda_", file_date, ".csv")),
@@ -107,7 +107,7 @@ modelsummary::modelsummary(
   coef_omit = "Intercept",
   exponentiate = T, 
   coef_rename = rename_var,
-  output = here::here("output", "full_model_ouput_2025-08-13.csv")
+  output = here::here("output", "full_model_ouput_2026-08-13.csv")
 )
 
 # Dominance analysis -----------------------------------------------------
@@ -127,7 +127,7 @@ df_da_boot <- boot_da[["boot"]][["t"]] |>
   as.data.frame()
 
 # Save output ------------------------------------------------------------
-file_date <- "2025-08-03"
+file_date <- "2026-08-03"
 
 write.csv(
   df_da_boot, 
