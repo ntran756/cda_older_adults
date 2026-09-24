@@ -4,7 +4,7 @@ This repository contains all code used to analyze how socioeconomic position and
 
 Data for this code is not publicly available due to the sensitive nature of the data. Requests for data access should be made to the California Department of Aging. 
 
-The code is written in R version 4.5.1. We used `renv` to faciliate reproducibility. Primary packages requred for analysis are:
+The code is written in R version 4.5.1. We used `renv` to faciliate reproducibility. Primary packages required for analysis are:
 -   `tidyverse` (version 2.0.0)
 -   `here` (version 1.0.1)
 -   `janitor` (version 2.2.1)
