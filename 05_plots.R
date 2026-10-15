@@ -18,6 +18,7 @@ load_output <- function(file) {
 df_cor <- load_output("table3_cor_matrix_2026-07-22.csv")
 df_reg <- load_output("table4_main_reg_2026-07-22.csv")
 df_da  <- load_output("da_boot_results_2026-08-03.csv") 
+df_sen_da  <- load_output("sen_da_boot_results_2025-08-03.csv") 
 
 # Plot correlation matrix ------------------------------------------------
 var_labels <- c(
@@ -186,63 +187,60 @@ p_reg <- ggforestplot::forestplot(
 p_reg
 
 # Forest plot of dominance analysis --------------------------------------
-df_df_boot_long <- df_da_boot |> 
-  tibble::as_tibble() |> 
-  dplyr::select(v1:v9) |> 
-  tidyr::pivot_longer(
-    cols = dplyr::everything(),
-    names_to = "exposure",
-    values_to = "value"
-  ) |> 
-  dplyr::mutate(
-    exposure = dplyr::case_when(
-      exposure == "V1" ~ "Education levels",
-      exposure == "V2" ~ "Unemployment",
-      exposure == "V3" ~ "Household income",
-      exposure == "V4" ~ "Household assets",
-      exposure == "V5" ~ "Financial insecurity",
-      exposure == "V6" ~ "Food insecurity",
-      exposure == "V7" ~ "Unstably housed",
-      exposure == "V8" ~ "Relies on public transportation",
-      exposure == "V9" ~ "LGBTQIA+ community safety"
+# Rename columns
+exposure_labels <- c(
+  v1 = "Education levels",
+  v2 = "Unemployment",
+  v3 = "Household income",
+  v4 = "Household assets",
+  v5 = "Financial insecurity",
+  v6 = "Food insecurity",
+  v7 = "Unstably housed",
+  v8 = "Relies on public transportation",
+  v9 = "LGBTQIA+ community safety"
+)
+
+summarise_boot <- function(df) {
+  df |>
+    tibble::as_tibble() |>
+    dplyr::select(v1:v9) |>
+    tidyr::pivot_longer(dplyr::everything(), names_to = "exposure", values_to = "value") |>
+    dplyr::mutate(exposure = exposure_labels[exposure]) |>
+    dplyr::group_by(exposure) |>
+    dplyr::summarise(
+      estimate = median(value, na.rm = TRUE),
+      lower = quantile(value, 0.025, na.rm = TRUE),
+      upper = quantile(value, 0.975, na.rm = TRUE)
     )
-  )
+}
 
-df_summary <- df_df_boot_long |>
-  dplyr::group_by(exposure) |>
-  dplyr::summarise(
-    estimate = median(value, na.rm = T),  
-    lower = quantile(value, 0.025, na.rm = T),
-    upper = quantile(value, 0.975, na.rm = T)
-  )
+plot_da <- function(df_summary) {
+  ggplot(df_summary, aes(forcats::fct_reorder(exposure, estimate), estimate * 100)) +
+    geom_errorbar(aes(ymin = lower * 100, ymax = upper * 100),
+                  width = 0.2, linewidth = 0.6) +
+    geom_point(size = 2, shape = 15) +
+    geom_text(aes(label = sprintf("%.1f (%.1f, %.1f)", estimate * 100, lower * 100, upper * 100)),
+              nudge_y = 0.26, vjust = -1, size = 3, fontface = "bold") +
+    coord_flip() +
+    scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.18))) +
+    labs(x = NULL, y = expression("McFadden's " * R^2 * " (%) with bootstrap 95% percentile CI")) +
+    theme_minimal(base_size = 12) +
+    theme(
+      axis.text = element_text(size = 10, color = "black"),
+      panel.grid.minor = element_blank(),
+      panel.grid.major = element_line(color = "grey90", linewidth = 0.2),
+      axis.line.x = element_line(color = "#4D4F53", linewidth = 0.2),
+      axis.ticks.x = element_line(color = "#4D4F53", linewidth = 0.2)
+    )
+}
 
-p_dom <- ggplot(df_summary, aes(x = forcats::fct_reorder(exposure, estimate), y = estimate * 100)) +
-  geom_errorbar(aes(ymin = lower * 100, ymax = upper * 100),
-                width = 0.2, linewidth = 0.6, color = "black") +
-  geom_point(size = 2, color = "black", shape = 15) +
-  geom_text(
-  aes(label = sprintf("%.1f (%.1f, %.1f)", estimate * 100, lower * 100, upper * 100)),  
-  nudge_y = 0.26, vjust = -1, size = 3, color = "black"
-  ) +
-  coord_flip() +
-  scale_y_continuous(
-    limits = c(0, NA),
-    expand = expansion(mult = c(0, 0.18))        
-  ) +
-  labs(
-    x = NULL,
-    y = expression("McFadden's " * R^2 * " (%) with bootstrap 95% percentile CI")
-  ) +
-  theme_minimal(base_size = 12) +
-  theme(
-    axis.text = element_text(size = 10, color = "black"),
-    panel.grid.minor = element_blank(),
-    panel.grid.major.y = element_line(color = "grey90", linewidth = 0.2),
-    axis.line.x = element_line(color = "#4D4F53", linewidth = 0.2),   
-    axis.ticks.x = element_line(color = "#4D4F53", linewidth = 0.2),  
-    panel.grid.major.x = element_line(linetype = "solid", color = "grey90", linewidth = 0.2)
-  )
+# Main analysis 
+p_dom <- plot_da(summarise_boot(df_da))
 p_dom
+
+# Sensitivity analysis
+p_dom_sen <- plot_da(summarise_boot(df_sen_da))
+p_dom_sen
 
 # Save outputs -----------------------------------------------------------
 file_date <- "2026-09-08"
@@ -270,6 +268,16 @@ ggplot2::ggsave(
 ggplot2::ggsave(
   here::here("output", paste0("dominance_analy_", file_date, ".png")),
   plot = p_dom, 
+  height = 100, 
+  width = 165, 
+  units = "mm", 
+  dpi = 600, 
+  bg = "white"
+)
+
+ggplot2::ggsave(
+  here::here("output", paste0("dominance_sen_analy_", file_date, ".png")),
+  plot = p_dom_sen, 
   height = 100, 
   width = 165, 
   units = "mm", 

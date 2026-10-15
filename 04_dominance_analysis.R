@@ -115,7 +115,7 @@ modelsummary::modelsummary(
 # by relative importance (pseudo r2)
 # Covariates forced into every model, NOT ranked
 boot_da <- dominanceanalysis::bootAverageDominanceAnalysis(
-  m,                    
+  m_cc,                    
   R = 1000,            
   constants = c(       
     "age_new", "gender_grp", "race_poc", "mil_service", "trauma_bin",
@@ -126,11 +126,35 @@ boot_da <- dominanceanalysis::bootAverageDominanceAnalysis(
 df_da_boot <- boot_da[["boot"]][["t"]] |> 
   as.data.frame()
 
+# Sensitivity analysis: adjusted models + mental health/substance use
+predictors <- c(predictors, "lon", "phq", "pcl", "audit", "current_smoke")
+formula <- as.formula(paste("scd ~", paste(predictors, collapse = " + ")))
+
+m_sen <- glm(formula, data = df, family = binomial())
+sen_boot_da <- dominanceanalysis::bootAverageDominanceAnalysis(
+  m_sen,                    
+  R = 1000,            
+  constants = c(       
+    "age_new", "gender_grp", "race_poc", "mil_service", "trauma_bin",
+    "support_bin", "urban", "caregiver", "hiv_pos", "hear_vis_loss",
+    "lon", "phq", "pcl", "audit", "current_smoke"
+  )
+)
+# Get general dominance values based on mcfadden's r2
+df_sen_da_boot <- sen_boot_da[["boot"]][["t"]] |> 
+  as.data.frame()
+
 # Save output ------------------------------------------------------------
 file_date <- "2026-08-03"
 
 write.csv(
   df_da_boot, 
   here::here("output", paste0("da_boot_results_", file_date, ".csv")),
+  row.names = F
+)
+
+write.csv(
+  df_sen_da_boot, 
+  here::here("output", paste0("sen_da_boot_results_", file_date, ".csv")),
   row.names = F
 )
