@@ -8,7 +8,7 @@ library(here)
 library(tableone)
 
 # load data
-file_date <- "2026-07-03"
+file_date <- "2026-10-27"
 
 df <- readr::read_csv(
   here::here("data", paste0("df_cda_older_adults_", file_date, ".csv")),
@@ -31,28 +31,25 @@ df <- df |>
     assets_cat = forcats::fct_relevel(assets_cat, "4")
   ) 
 
-# Define variable list for analysis
-df <- df |> 
-  dplyr::select(
-    ed_levels, no_work, income_cat, assets_cat, finance_insecure_cat, food_insecure_cat,
-    unstable_bin, public_transport, safe_cat, scd, 
-    age_new, gender_grp, race_poc, mil_service, trauma_bin, urban, 
-    support_bin, caregiver, 
-    hiv_pos, hear_vis_loss, current_smoke, lon, phq, pcl, audit
-  ) |>
-    dplyr::mutate(dplyr::across(c(ed_levels:current_smoke), ~as.factor(.x)))
-
 # Descriptive analysis ---------------------------------------------------
-# Check total missing
-1-sum(complete.cases(df))/nrow(df)
+# Check total missing over the analytic variable set
+analytic_vars <- c(
+  "ed_levels", "no_work", "income_cat", "assets_cat", "finance_insecure_cat",
+  "food_insecure_cat", "unstable_bin", "public_transport", "safe_cat", "scd",
+  "age_cat", "gender_grp", "race_poc", "usborn", "mil_service", "urban", "hiv_pos", 
+  "current_smoke", "lon", "phq", "pcl", "audit"
+)
+
+1 - sum(complete.cases(df[analytic_vars])) / nrow(df)
+rm(analytic_vars)
 
 # Participant characteristics by SCD
 v_names <- df |>
   dplyr::select(
-    age_new, race_ethn_1:race_ethn_8, race_multi, race_poc, race_miss,
-    gender_grp, intersex, asexual:another, so_multi, so_miss, usborn,
-    mil_service, insured, urban, trauma_bin, support_bin, caregiver,
-    current_smoke, hiv_pos, hear_vis_loss, lon, phq, pcl, audit
+    age_cat, race_ethn_1:race_ethn_8, race_multi, race_poc, race_miss,
+    gender_grp, intersex, asexual:another, so_multi, so_miss,
+    usborn, mil_service, insured, urban, hiv_pos, current_smoke, 
+    lon, phq, pcl, audit
   ) |> names()
 
 v_fct_names <- v_names[!v_names %in% c("lon", "phq", "pcl", "audit")]
@@ -90,13 +87,18 @@ tab2 <- tableone::CreateTableOne(
 # Examine correlation matrix between SEP and socioenvironmental factors
 # Reverse order of safe_cat
 df <- df |>
-  dplyr::mutate(unsafe_cat = as.numeric(forcats::fct_rev(factor(safe_cat))))
+  dplyr::mutate(
+    unsafe_cat = as.numeric(forcats::fct_rev(factor(safe_cat))),
+    ed_num = as.numeric(as.character(ed_levels)),
+    income_num = as.numeric(as.character(income_cat)),
+    assets_num = as.numeric(as.character(assets_cat)),
+  )
 
 vars <- c(
-  "ed_levels",
+  "ed_num",
   "no_work",
-  "income_cat",
-  "assets_cat",
+  "income_num",
+  "assets_num",
   "finance_insecure_cat",
   "food_insecure_cat",
   "unstable_bin",
@@ -128,16 +130,25 @@ df_cor <- lapply(pairs, function(pair) {
   )
 }) |> dplyr::bind_rows()
 
+# Define regression analysis variable list
+df_reg <- df |> 
+  dplyr::select(
+    ed_levels, no_work, income_cat, assets_cat, finance_insecure_cat, 
+    food_insecure_cat, unstable_bin, public_transport, safe_cat, scd, 
+    age_cat, gender_grp, race_poc, usborn, mil_service, trauma_bin, urban, 
+    hiv_pos, current_smoke, lon, phq, pcl, audit
+  ) 
+
 # Save outputs -----------------------------------------------------------
-file_date <- "2026-07-22"
+file_date <- "2026-10-27"
 
 write.csv(
-  tab1, 
+  print(tab1), 
   here::here("output", paste0("table1_part_character_", file_date, ".csv"))
 )
 
 write.csv(
-  tab2, 
+  print(tab2), 
   here::here("output", paste0("table2_sep_enviro_", file_date, ".csv"))
 )
 
@@ -149,7 +160,7 @@ write.csv(
 
 # Save data --------------------------------------------------------------
 write.csv(
-  df, 
+  df_reg, 
   here::here("data", paste0("df_reg_cda_", file_date, ".csv")),
   row.names = F
 )

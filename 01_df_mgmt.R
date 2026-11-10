@@ -18,16 +18,15 @@ df_raw <- readr::read_csv(
 # Exclude people with missing data for `memloss`
 df <- df_raw |> 
   dplyr::select(
-    age_new, race_ethn_1:race_ethn_8, orientation_1:orientation_11, asexual:another, 
+    age_cat, race_ethn_1:race_ethn_8, orientation_1:orientation_11, asexual:another, 
     genderid_1:genderid_12, gender_cat, saab, intersex, birthplace, density, milstatus, 
     trauma, insurance, support, caregiver_rec, caregiver, hivstatus, dis_omb1:dis_omb6,
     lonely1:lonely3, phq_1, phq_2, pcl_1:pcl_6, audit1:audit3, smoker, smoke_now, 
-    ed_levels, work, income, assets, finance_insecure, food_insecure,
+    ed_levels, work, employment7r, income, assets, finance_insecure, food_insecure,
     unstable, transport_how5r, access, safe_gm_cat, safe_sm_cat, memloss
   ) 
 
 rm(df_raw)
-
 
 # Data cleaning ----------------------------------------------------------
 # Recode variables as needed for analysis
@@ -36,7 +35,7 @@ df <- df |>
   dplyr::mutate(
     scd = ifelse(memloss == 1, 1, 0),
     scd2 = ifelse(memloss %in% c(1,3), 1, 0),
-    no_work = ifelse(work == 0, 1, 0),
+    no_work = ifelse(work == 0 & employment7r == 0, 1, 0), # unemployed & not retired
     income_cat = dplyr::case_when(
       is.na(income) ~ NA, 
       income %in% 1:4 ~ 1, 
@@ -140,7 +139,7 @@ df <- df |>
   )
 
 # Save data --------------------------------------------------------------
-file_date <- "2026-07-03"
+file_date <- "2026-10-27"
 
 write.csv(
   df, 

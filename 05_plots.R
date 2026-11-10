@@ -7,6 +7,7 @@ library(tidyverse)
 library(here)
 library(ggforestplot)
 library(ggforce)
+library(ggtext)
 
 # Helper to read a csv from output
 load_output <- function(file) {
@@ -15,17 +16,18 @@ load_output <- function(file) {
 }
 
 # load data
-df_cor <- load_output("table3_cor_matrix_2026-07-22.csv")
-df_reg <- load_output("table4_main_reg_2026-07-22.csv")
-df_da  <- load_output("da_boot_results_2026-08-03.csv") 
-df_sen_da  <- load_output("sen_da_boot_results_2025-08-03.csv") 
+df_cor <- load_output("table3_cor_matrix_2026-10-27.csv")
+df_reg <- load_output("table4_main_reg_2026-10-27.csv")
+df_da  <- load_output("da_boot_results_2026-10-27.csv") 
+df_sen_da  <- load_output("sen_da_boot_results_2026-10-27.csv") 
+rm(load_output)
 
 # Plot correlation matrix ------------------------------------------------
 var_labels <- c(
-  "ed_levels" = "Education",
+  "ed_num" = "Education levels",
   "no_work" = "Unemployment",
-  "income_cat" = "Income",
-  "assets_cat" = "Assets",
+  "income_num" = "Income",
+  "assets_num" = "Assets",
   "finance_insecure_cat" = "Financial insecurity",
   "food_insecure_cat" = "Food insecurity",
   "unstable_bin" = "Unstably housed",
@@ -33,6 +35,7 @@ var_labels <- c(
   "unsafe_cat" = "Lack LGBTQIA+ community safety"
 )
 
+vars <- names(var_labels)
 var_pos <- setNames(seq_along(vars), vars)
 
 df_heat <- df_cor |>
@@ -144,16 +147,16 @@ df_reg <- df_reg |>
   )
 
 p_reg <- ggforestplot::forestplot(
-  df = df_mod_out,
+  df = df_reg,
   name = contrast2,
   estimate = estimate,
-  se = std.error,
-  pvalue = p.value,
+  se = std_error,
+  pvalue = p_value,
   psignif = 1,
   colour = model,
   shape = model,
   xlab = "Odds ratio for subjective cognitive decline (95% CI)",
-  logodds = F
+  logodds = T
 ) +   
   scale_color_manual(
     values = c("#2C7FB8", "#D95F02"),
@@ -220,7 +223,7 @@ plot_da <- function(df_summary) {
                   width = 0.2, linewidth = 0.6) +
     geom_point(size = 2, shape = 15) +
     geom_text(aes(label = sprintf("%.1f (%.1f, %.1f)", estimate * 100, lower * 100, upper * 100)),
-              nudge_y = 0.26, vjust = -1, size = 3, fontface = "bold") +
+              nudge_y = 0.4, vjust = -1, size = 3) +
     coord_flip() +
     scale_y_continuous(limits = c(0, NA), expand = expansion(mult = c(0, 0.18))) +
     labs(x = NULL, y = expression("McFadden's " * R^2 * " (%) with bootstrap 95% percentile CI")) +
@@ -243,7 +246,7 @@ p_dom_sen <- plot_da(summarise_boot(df_sen_da))
 p_dom_sen
 
 # Save outputs -----------------------------------------------------------
-file_date <- "2026-09-08"
+file_date <- "2026-10-27"
 
 ggplot2::ggsave(
   here::here("output", paste0("spearmen_cor_", file_date, ".png")),
